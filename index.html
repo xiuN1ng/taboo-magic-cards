@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>禁忌魔卡</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+</head>
+<body>
+  <div id="app">
+    <!-- Title screen -->
+    <div id="screen-title" class="screen active">
+      <div class="title-frame">
+        <h1 class="game-title">禁 忌 魔 卡</h1>
+        <p class="subtitle">Taboo Magic Cards</p>
+        <p class="tagline">「别 按 那 个 键」</p>
+        <div class="title-buttons">
+          <button class="btn-primary" id="btn-start">开 始 一 局</button>
+          <button class="btn-secondary" id="btn-rules">玩 法 说 明</button>
+        </div>
+        <p class="version">v0.8.2 · 数值验证体系</p>
+      </div>
+    </div>
+
+    <!-- Rules screen -->
+    <div id="screen-rules" class="screen">
+      <div class="rules-frame">
+        <h2>玩 法</h2>
+        <div class="rules-section">
+          <h3>得分公式</h3>
+          <p class="rule-formula">本手得分 = (手型基础 + 牌面) × 总倍率</p>
+          <p class="rule-example">例:高牌 5 + 牌面 12 = 17 筹码,× 1.0 倍率 = <b>17 分</b></p>
+        </div>
+        <div class="rules-section">
+          <h3>怎么出牌</h3>
+          <ul>
+            <li>8 张手牌,选 1–5 张凑手型(高牌/对子/顺子/同花等)</li>
+            <li>下方实时显示得分公式,可见筹码 × 倍率怎么算</li>
+            <li>本手得分 ≥ 过关目标即过关</li>
+            <li><b>8 关 × 3 盲 = 24 关,目标随关数递增</b> (与厄运无关)</li>
+          </ul>
+        </div>
+        <div class="rules-section">
+          <h3>三个特殊机制</h3>
+          <ul>
+            <li><b>禁忌指令</b>(顶部红框):本关被禁的事。违反 = 当手 ×2.5 分 + 戒断 +1</li>
+            <li><b>禁卡</b>(红色边框):出 +5 倍率,但 <b>厄运 +1</b></li>
+            <li><b>那个键</b>(右下角红):任何时候都能按。70% 奖励 / 30% 惩罚 + <b>戒断 +1</b></li>
+          </ul>
+        </div>
+        <div class="rules-section">
+          <h3>厄运 阈值</h3>
+          <ul>
+            <li><b>0–2</b>: 安全,无效果</li>
+            <li><b>3–5</b>: 小诅咒,商店净化变贵</li>
+            <li><b>6–8</b>: 中诅咒,部分手牌可能自动变禁卡</li>
+            <li><b>9–10</b>: 临界,强制结束游戏进入沉沦结局</li>
+          </ul>
+        </div>
+        <div class="rules-section">
+          <h3>小丑(顶部 5 个槽)</h3>
+          <ul>
+            <li>各自有被动效果,会加成你的筹码或倍率</li>
+            <li>商店可以买、可以卖(+$2)、满了可以替换</li>
+          </ul>
+        </div>
+        <div class="rules-section">
+          <h3>戒断值 → 结局</h3>
+          <ul>
+            <li><b>0–2 清白</b>:你守住了。世界是安全的。</li>
+            <li><b>3–10 平衡</b>:你学会了与诱惑共处。</li>
+            <li><b>11+ 沉沦</b>:你听见那个声音在低语。</li>
+          </ul>
+        </div>
+        <button class="btn-primary" id="btn-back-title">返 回</button>
+      </div>
+    </div>
+
+    <!-- Game screen -->
+    <div id="screen-game" class="screen">
+      <div class="hud">
+        <div class="hud-left">
+          <div class="hud-item"><span class="hud-label">第</span> <span id="hud-ante">1</span><span class="hud-label">/8 关 · 第</span> <span id="hud-blind">1</span><span class="hud-label">/3 盲</span></div>
+          <div class="hud-item"><span class="hud-label">本手得分</span> <span id="hud-score">0</span></div>
+        </div>
+        <div class="hud-center" id="hud-directive">
+          <span class="directive-prefix">禁忌指令</span>
+          <span class="directive-text" id="directive-text">—</span>
+        </div>
+        <div class="hud-right">
+          <div class="hud-item hud-doom-wrap" id="hud-doom-wrap" title="点击查看阈值说明">
+            <span class="hud-label">厄运</span>
+            <span id="hud-doom">0</span> <span class="hud-label">/ 10</span>
+          </div>
+          <div class="hud-item">戒断 <span id="hud-corrupt">0</span></div>
+          <div class="hud-item">$ <span id="hud-money">0</span></div>
+        </div>
+      </div>
+
+      <div class="target-panel" id="target-panel">
+        <div class="target-row">
+          <span class="target-label">过关目标</span>
+          <span class="target-value" id="target-value">100</span>
+          <span class="target-sep">·</span>
+          <span class="target-current-label">本手</span>
+          <span class="target-current" id="target-current">0</span>
+          <span class="target-needed-label">还差</span>
+          <span class="target-needed" id="target-needed">100</span>
+        </div>
+        <div class="target-bar">
+          <div class="target-bar-fill" id="target-bar-fill"></div>
+          <div class="target-bar-threshold" style="left: 100%"></div>
+        </div>
+      </div>
+
+      <div class="doom-tooltip" id="doom-tooltip">
+        <h3>厄 运 阈 值 说 明</h3>
+        <div class="dt-row"><span class="dt-tier">0–2</span><span class="dt-text">安全 · 无额外效果</span></div>
+        <div class="dt-row"><span class="dt-tier">3–5</span><span class="dt-text">小诅咒 · 商店净化变贵</span></div>
+        <div class="dt-row"><span class="dt-tier">6–8</span><span class="dt-text">中诅咒 · 手牌可能变禁卡</span></div>
+        <div class="dt-row dt-danger"><span class="dt-tier">9–10</span><span class="dt-text">临界 · 强制进入沉沦结局</span></div>
+        <p class="dt-hint">出禁卡 +1 · 按键 25% 概率 +1 · 商店净化可 -1~-2</p>
+      </div>
+
+      <div class="always-button" id="always-button" title="别按">
+        <div class="ab-pulse"></div>
+        <div class="ab-label">按</div>
+        <div class="ab-count" id="ab-count">0</div>
+      </div>
+
+      <div class="voice-overlay" id="voice-overlay">
+        <div class="voice-text" id="voice-text">—</div>
+      </div>
+
+      <div class="joker-bar" id="joker-bar">
+        <div class="joker-slot empty" data-slot="0"><span>+</span></div>
+        <div class="joker-slot empty" data-slot="1"><span>+</span></div>
+        <div class="joker-slot empty" data-slot="2"><span>+</span></div>
+        <div class="joker-slot empty" data-slot="3"><span>+</span></div>
+        <div class="joker-slot empty" data-slot="4"><span>+</span></div>
+      </div>
+
+      <div class="hand-area" id="hand-area">
+        <!-- Cards rendered here -->
+      </div>
+
+      <div class="action-area">
+        <div class="action-info">
+          <div class="ai-stat">
+            <span class="ai-stat-label">手型</span>
+            <span class="ai-stat-value" id="hand-type-name">—</span>
+          </div>
+          <div class="ai-stat">
+            <span class="ai-stat-label">选牌</span>
+            <span class="ai-stat-value" id="selected-count">0</span>
+            <span class="ai-stat-unit">张</span>
+          </div>
+          <div class="ai-stat">
+            <span class="ai-stat-label">弃牌余</span>
+            <span class="ai-stat-value" id="discards-left">3</span>
+          </div>
+        </div>
+        <div class="score-formula" id="score-formula">
+          <div class="sf-piece sf-hand">
+            <div class="sf-num" id="sf-hand-num">0</div>
+            <div class="sf-label">手型基础</div>
+          </div>
+          <span class="sf-plus">+</span>
+          <div class="sf-piece sf-cards">
+            <div class="sf-num" id="sf-cards-num">0</div>
+            <div class="sf-label">牌面筹码</div>
+          </div>
+          <div class="sf-eq sf-eq-1">=</div>
+          <div class="sf-piece sf-chips">
+            <div class="sf-num" id="sf-chips-num">0</div>
+            <div class="sf-label">总筹码</div>
+          </div>
+          <span class="sf-times">×</span>
+          <div class="sf-piece sf-mult">
+            <div class="sf-num" id="sf-mult-num">0</div>
+            <div class="sf-label">总倍率</div>
+          </div>
+          <div class="sf-eq sf-eq-2">=</div>
+          <div class="sf-piece sf-final">
+            <div class="sf-num" id="sf-final-num">0</div>
+            <div class="sf-label">本手得分</div>
+          </div>
+        </div>
+        <div class="action-buttons">
+          <button class="btn-secondary" id="btn-play">出 牌</button>
+          <button class="btn-secondary" id="btn-discard">弃 未 选</button>
+          <button class="btn-secondary" id="btn-hand-types">牌 型</button>
+          <button class="btn-secondary" id="btn-sort">排 序</button>
+        </div>
+      </div>
+
+      <div class="result-overlay" id="result-overlay">
+        <div class="result-box">
+          <h2 id="result-title">—</h2>
+          <p id="result-detail">—</p>
+          <div class="result-buttons">
+            <button class="btn-primary" id="btn-next">继 续</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="button-event" id="button-event">
+        <div class="button-frame">
+          <p class="event-prompt">那 个 键 在 召 唤 你</p>
+          <button class="big-button" id="btn-press">按</button>
+          <button class="btn-secondary" id="btn-skip">不 按</button>
+          <p class="event-detail" id="event-detail">70% 奖励 · 30% 风险</p>
+        </div>
+      </div>
+
+      <div class="shop-overlay" id="shop-overlay">
+        <div class="shop-frame">
+          <h2>商 店</h2>
+          <p class="shop-money">$ <span id="shop-money">0</span></p>
+          <div class="shop-items" id="shop-items"></div>
+          <div class="shop-jokers-hint" id="shop-jokers-hint"></div>
+          <div class="shop-buttons">
+            <button class="btn-secondary" id="btn-shop-leave">离 开 商 店</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="joker-detail" id="joker-detail">
+        <div class="joker-detail-box">
+          <h2 id="jd-name">—</h2>
+          <p id="jd-desc">—</p>
+          <div class="jd-buttons">
+            <button class="btn-primary" id="jd-sell">出 售 +$2</button>
+            <button class="btn-secondary" id="jd-close">关 闭</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="replace-prompt" id="replace-prompt">
+        <div class="replace-frame">
+          <h2>选 择 要 替 换 的 小 丑</h2>
+          <p class="replace-hint" id="replace-hint">点击下方要替换的小丑</p>
+          <div class="replace-targets" id="replace-targets"></div>
+          <button class="btn-secondary" id="btn-replace-cancel">取 消</button>
+        </div>
+      </div>
+
+      <div class="hand-types-popup" id="hand-types-popup">
+        <div class="htp-frame">
+          <h2>牌 型 大 全</h2>
+          <p class="htp-hint">得分公式:(手型基础 + 牌面) × 总倍率 = 本手得分</p>
+          <div class="htp-list" id="htp-list"></div>
+          <button class="btn-primary" id="btn-htp-close">关 闭</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- End screen -->
+    <div id="screen-end" class="screen">
+      <div class="end-frame">
+        <h1 id="end-title">结 局</h1>
+        <h2 id="end-subtitle">—</h2>
+        <p id="end-description">—</p>
+        <div class="end-stats">
+          <div>本局打到 第 <b id="end-ante">1</b>/8 关 · 第 <b id="end-blind">1</b>/3 盲</div>
+          <div>厄运 峰值 <b id="end-doom">0</b></div>
+          <div>戒断值 <b id="end-corrupt">0</b></div>
+          <div>违规 <b id="end-violations">0</b> 次</div>
+          <div>按键 <b id="end-presses">0</b> 次</div>
+        </div>
+        <button class="btn-primary" id="btn-restart">再 来 一 局</button>
+        <button class="btn-secondary" id="btn-back-title-2">回 主 菜 单</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/hand-eval.js"></script>
+  <script src="js/deck.js"></script>
+  <script src="js/directive.js"></script>
+  <script src="js/jokers.js"></script>
+  <script src="js/button-event.js"></script>
+  <script src="js/shop.js"></script>
+  <script src="js/endings.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/game-state.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
