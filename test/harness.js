@@ -793,6 +793,33 @@ test('markForbidden 标 N 张', () => {
   eq(d.filter(c => c.forbidden).length, 5);
 });
 
+test('markForbidden 1000 次全部标中指定数量(防重复拾取回归)', () => {
+  // If pool is incorrectly maintained, random picks can collide and silently
+  // mark fewer cards. This is a real bug we already caught once.
+  for (let i = 0; i < 1000; i++) {
+    let d = Deck.buildStandardDeck();
+    d = Deck.markForbidden(d, 5);
+    if (d.filter(c => c.forbidden).length !== 5) {
+      throw new Error(`iter ${i}: only marked ${d.filter(c => c.forbidden).length} / 5`);
+    }
+  }
+});
+
+test('markForbidden 不会丢牌(防 swap-remove bug)', () => {
+  let d = Deck.buildStandardDeck();
+  d = Deck.markForbidden(d, 5);
+  eq(d.length, 52, '5 marked cards on a 52-card deck still leaves 52');
+});
+
+test('markForbidden 标 0/52/超量不崩', () => {
+  let d1 = Deck.markForbidden(Deck.buildStandardDeck(), 0);
+  eq(d1.filter(c => c.forbidden).length, 0);
+  let d2 = Deck.markForbidden(Deck.buildStandardDeck(), 52);
+  eq(d2.filter(c => c.forbidden).length, 52);
+  let d3 = Deck.markForbidden(Deck.buildStandardDeck(), 100);
+  eq(d3.filter(c => c.forbidden).length, 52, '超量 <= 实际牌数');
+});
+
 test('shuffle 不改长度, 不丢牌', () => {
   const d = Deck.buildStandardDeck();
   const s = Deck.shuffle(d);

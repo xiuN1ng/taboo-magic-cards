@@ -45,10 +45,18 @@ function shuffle(arr) {
 
 // Mark `count` random cards as forbidden (red border)
 function markForbidden(deck, count) {
+  // Use a separate indices pool to pick from so we never pick the same
+  // card twice (which would silently mark fewer than `count` cards).
   const a = deck.slice();
-  for (let i = 0; i < count && a.length > 0; i++) {
-    const idx = Math.floor(Math.random() * a.length);
-    a[idx] = { ...a[idx], forbidden: true };
+  const pool = a.map((_, i) => i);
+  for (let i = 0; i < count && pool.length > 0; i++) {
+    const pickIdx = Math.floor(Math.random() * pool.length);
+    const cardIdx = pool[pickIdx];
+    a[cardIdx] = { ...a[cardIdx], forbidden: true };
+    // Remove from pool (swap-remove)
+    const last = pool.length - 1;
+    if (pickIdx !== last) pool[pickIdx] = pool[last];
+    pool.pop();
   }
   return a;
 }
