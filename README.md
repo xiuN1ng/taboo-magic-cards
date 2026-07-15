@@ -110,6 +110,25 @@ This repo auto-deploys to GitHub Pages on every push to `main`:
 2. Runs `node test/harness.js` (must pass)
 3. Deploys to `https://xiuN1ng.github.io/taboo-magic-cards/`
 
+### Maintenance
+
+**GitHub PAT Rotation**
+
+The Personal Access Token used to push to this repo expires **30 days** after creation. To rotate:
+
+1. Visit https://github.com/settings/tokens/new
+2. Create new PAT with `repo` + `workflow` scopes
+3. Update the local encrypted secret (in Mavis's secret store, name `GITHUB_TOKEN`)
+4. Push a small commit to verify the new token works
+5. Revoke the old token at https://github.com/settings/tokens
+
+**Expiry schedule** (for current token):
+- Created: 2026-07-15
+- Expires: 2026-08-14
+- Auto-reminder fires: 2026-08-11 (3 days before)
+
+The CI workflow itself uses GitHub Actions' auto-generated `GITHUB_TOKEN` and is **not affected** by PAT expiration — only direct pushes require the user PAT.
+
 ## Tech Stack
 
 - **Vanilla JS** (ES6+, no transpilation)
