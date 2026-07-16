@@ -3,7 +3,8 @@
 > A Balatro-like roguelike card game. The theme is **「别按那个键」 — "Don't Press That Button"**.
 
 ![Status](https://img.shields.io/badge/status-MVP-blueviolet)
-![Tests](https://img.shields.io/badge/tests-137%20passing-success)
+[![CI / Deploy](https://github.com/xiuN1ng/taboo-magic-cards/actions/workflows/ci.yml/badge.svg)](https://github.com/xiuN1ng/taboo-magic-cards/actions/workflows/ci.yml)
+![Tests](https://img.shields.io/badge/tests-140%20passing-success)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 ## What is it?
@@ -104,11 +105,25 @@ See [`test/README.md`](test/README.md) for details.
 
 ## Deployment
 
-This repo auto-deploys to GitHub Pages on every push to `main`:
+This repo auto-deploys to GitHub Pages via `.github/workflows/ci.yml`:
 
-1. `.github/workflows/deploy.yml` triggers on push
-2. Runs `node test/harness.js` (must pass)
-3. Deploys to `https://xiuN1ng.github.io/taboo-magic-cards/`
+| Trigger | What happens |
+|---------|--------------|
+| **Pull request** opened/updated against `main` | Run 140-assertion test suite as a **gate** (no deploy) |
+| **Push to `main`** (after merge) | Run tests + deploy to `https://xiuN1ng.github.io/taboo-magic-cards/` |
+| **Manual dispatch** | Run the pipeline on demand |
+
+The deploy job only runs on `push` to `main` (so PRs don't accidentally publish). All jobs share the same test gate — no deploy can ship without green tests.
+
+## Contributing
+
+1. Create a feature branch: `git checkout -b fix/your-thing`
+2. Make changes, run `node test/harness.js` locally
+3. Push the branch: `git push origin fix/your-thing`
+4. Open a PR against `main` — CI runs the test gate automatically
+5. After review, merge the PR — CI then tests + deploys to Pages
+
+`.github/pull_request_template.md` provides the PR checklist.
 
 ### Maintenance
 

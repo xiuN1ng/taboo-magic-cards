@@ -1,8 +1,13 @@
-name: Deploy to GitHub Pages
+name: CI / Deploy
 
 on:
+  # PR opened/updated → run tests as a gate
+  pull_request:
+    branches: [main]
+  # Merge to main → full pipeline (test + deploy)
   push:
     branches: [main]
+  # Manual trigger from Actions UI
   workflow_dispatch:
 
 permissions:
@@ -10,15 +15,15 @@ permissions:
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment, queueing others
+# Cancel in-progress runs on the same ref (saves CI minutes on rapid pushes)
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  # Test gate: run 137-assertion harness before deploying
+  # ============== Test gate (runs on PR + push) ==============
   test:
-    name: Run data validation tests
+    name: Run 140-assertion test suite
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -32,10 +37,11 @@ jobs:
       - name: Run test harness
         run: node test/harness.js
 
-  # Deploy only if tests pass
+  # ============== Deploy to GitHub Pages (only on main push) ==============
   deploy:
     name: Deploy to GitHub Pages
     needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
