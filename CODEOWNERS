@@ -1,0 +1,5 @@
+# CODEOWNERS — require code-reviewer agent approval on all changes
+# (this is the only "user" in the repo, used as a sentinel)
+# Branch protection enforces: require 1 review from code-reviewer.
+
+*       @xiuN1ng
