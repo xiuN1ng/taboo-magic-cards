@@ -15,7 +15,7 @@
 
 ```
 1. Create a feature branch     (NEVER push to main directly — branch protection will block)
-2. Run `node test/harness.js`  (must pass all 140 assertions locally)
+2. Run `node test/harness.js`  (must pass all assertions locally — currently 142)
 3. Push branch + open PR       (CI runs tests as a gate)
 4. Spawn `code-reviewer` agent (separate persona, only reviews, never writes)
 5. Address review findings     (APPROVE → merge | REQUEST_CHANGES → fix)
@@ -27,7 +27,7 @@
 - ❌ Never push directly to `main`. Use a branch + PR.
 - ❌ Never approve your own code. The dev (you) and the reviewer are separate.
 - ❌ Never merge a PR that the `code-reviewer` agent hasn't reviewed.
-- ❌ Never push without running `node test/harness.js` first. All 140 must be green.
+- ❌ Never push without running `node test/harness.js` first. All assertions must be green.
 - ❌ Never add no-op tests (`assert(1+1===2)`) just to "look like a test change" — the code-reviewer will catch this.
 - ❌ Never hardcode secrets in the repo. Use `${GITHUB_TOKEN}` env var.
 
@@ -41,10 +41,13 @@
 | `js/deck.js` | 52-card deck + `markForbidden()` (pool-based, see "known sharp edges") |
 | `js/jokers.js` | 10 jokers with `apply(hand, selected, state) → {chips, mult}` |
 | `js/directive.js` | 10 forbidden directives + `checkViolation()` |
+| `js/button-event.js` | The 70/30 reward/penalty roll for the always-visible red button |
+| `js/shop.js` | Shop between blinds (buy jokers, sell, replace) |
+| `js/endings.js` | 3 endings based on 戒断值 (corruption): pure / balanced / corrupted |
 | `js/game-state.js` | Single source of truth, `nextBlind()`, `calculateTarget(ante, blind)` |
 | `js/ui.js` | All UI rendering + anime.js animations |
 | `js/main.js` | Orchestrator |
-| `test/harness.js` | 140 assertions across 14 modules — run this before pushing |
+| `test/harness.js` | Test harness — currently 142 assertions across 15 modules, run before pushing |
 | `test/oracle.js` | Independent reference poker evaluator (cross-checks production) |
 | `test/README.md` | How the test suite works |
 | `scripts/review-pr.sh` | PR review helper: fetches diff, writes review prompt |
@@ -67,7 +70,10 @@ const pool = a.map((_, i) => i);
 for (let i = 0; i < count && pool.length > 0; i++) {
   const pickIdx = Math.floor(Math.random() * pool.length);
   a[pool[pickIdx]] = { ...a[pool[pickIdx]], forbidden: true };
-  // swap-remove
+  // swap-remove from pool (so next pick can't land on the same card)
+  const last = pool.length - 1;
+  if (pickIdx !== last) pool[pickIdx] = pool[last];
+  pool.pop();
 }
 
 // ❌ Wrong (caused 17.7% bug)
@@ -108,7 +114,7 @@ bash scripts/review-pr.sh <PR_NUMBER>
 # Or in conversation: say "review PR #N"
 ```
 
-**Architectural caveat**: with a single GitHub user, `REQUEST_CHANGES` may be rejected by GitHub (same user can't block own PR). `APPROVE` works. The reviewer posts `COMMENT` as a fallback and is explicit about the limitation.
+**Architectural caveat**: with a single GitHub user, GitHub **rejects both `APPROVE` and `REQUEST_CHANGES`** when reviewer and PR author are the same account (HTTP 422 *Review Can not approve your own pull request*). The reviewer posts `COMMENT` instead and treats the verdict text as the de-facto approval. To exercise the full request-changes path, you need a second GitHub identity (bot account) or an org-owned repo with a reviewer team.
 
 ## Deploy
 
@@ -121,10 +127,10 @@ bash scripts/review-pr.sh <PR_NUMBER>
 ```bash
 cd /workspace/taboo-cards
 node test/harness.js
-# Should print "通过: 140    失败: 0" and exit 0
+# Should print "通过: 142    失败: 0" and exit 0
 ```
 
-- 140 assertions across 14 modules
+- 142 assertions across 15 modules
 - 5000+ random hands cross-validated against independent oracle
 - 1000 random hands checked against invariants (NaN-safety, type legality)
 - Pure Node, no server, no browser. ~1.4s total.
