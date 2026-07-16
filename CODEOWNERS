@@ -1,0 +1,13 @@
+# CODEOWNERS — request review from the repo owner on every PR.
+#
+# Note: this is NOT the same as the code-reviewer agent. GitHub CODEOWNERS
+# resolves to GitHub user accounts, and the code-reviewer is a Mavis agent
+# that posts reviews via the API. The two-layer review is:
+#
+#   1. code-reviewer agent → posts APPROVE/REQUEST_CHANGES via API
+#   2. @xiuN1ng (human/owner) → final approval via GitHub UI
+#
+# The agent is the gatekeeper; the human is the legal approver.
+# In a fully org-owned repo, this would be a dedicated bot account or team.
+
+*       @xiuN1ng
