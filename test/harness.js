@@ -1010,6 +1010,31 @@ test('违规乘 2.5 后 max mult × max chips 估算', () => {
 //  correctly flagged it as a no-op. Removed. A real test would actually check
 //  something meaningful about the workflow.)
 
+// ====================== Section 15: review-pr.sh selftest ======================
+
+section('15. review-pr.sh selftest');
+
+test('scripts/review-pr.sh exists and is executable', () => {
+  const fs = require('fs');
+  const path = require('path');
+  const scriptPath = path.join(__dirname, '..', 'scripts', 'review-pr.sh');
+  if (!fs.existsSync(scriptPath)) throw new Error('script not found');
+  const stat = fs.statSync(scriptPath);
+  if (!(stat.mode & 0o111)) throw new Error('script not executable');
+});
+
+test('review-pr.sh --selftest passes (catches the gh_api call-signature bug)', () => {
+  const { execSync } = require('child_process');
+  const path = require('path');
+  const scriptPath = path.join(__dirname, '..', 'scripts', 'review-pr.sh');
+  try {
+    const out = execSync(`bash "${scriptPath}" --selftest`, { encoding: 'utf8', timeout: 15000 });
+    if (!out.includes('Self-test PASS')) throw new Error('selftest did not pass');
+  } catch (e) {
+    throw new Error(`selftest failed: ${e.message}`);
+  }
+});
+
 console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 console.log(`  通过: ${results.passed}    失败: ${results.failed}`);
 console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
