@@ -17,6 +17,18 @@
 
 set -euo pipefail
 
+# Self-test mode (must check FIRST so --selftest isn't treated as PR number)
+if [ "${1:-}" = "--selftest" ]; then
+  echo "🧪 Running self-test..."
+  if bash "$0" 9999999 2>/dev/null; then
+    echo "❌ Self-test FAILED: script accepted a non-existent PR (HTTP 404 expected)"
+    exit 1
+  else
+    echo "✅ Self-test PASS: gh_api() correctly detected HTTP 404"
+    exit 0
+  fi
+fi
+
 PR_NUMBER="${1:-}"
 REPO="${2:-${GITHUB_REPO:-xiuN1ng/taboo-magic-cards}}"
 
@@ -34,12 +46,14 @@ if [ -z "${GITHUB_TOKEN:-}" ]; then
 fi
 
 # Helper: HTTP-status-checked curl to GitHub API.
+# Usage: gh_api <URL> [extra-curl-args...]
 # Returns body on 2xx, exits 1 on anything else.
 gh_api() {
   local url="$1"
+  shift
   local out
   out=$(curl -sL --max-time 15 -w '\n__HTTP_STATUS__:%{http_code}' \
-    -H "Authorization: Bearer ${GITHUB_TOKEN}" "$url")
+    -H "Authorization: Bearer ${GITHUB_TOKEN}" "$@" "$url")
   local status="${out##*__HTTP_STATUS__:}"
   local body="${out%$'\n'__HTTP_STATUS__:*}"
   if [ "$status" -lt 200 ] || [ "$status" -ge 300 ]; then
@@ -59,8 +73,8 @@ PR_AUTHOR=$(echo "$PR_JSON" | python3 -c "import json,sys; d=json.load(sys.stdin
 PR_HEAD=$(echo "$PR_JSON" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('head',{}).get('ref',''))")
 
 # Fetch raw diff with status check
-PR_DIFF=$(gh_api -H "Accept: application/vnd.github.v3.diff" \
-  "https://api.github.com/repos/${REPO}/pulls/${PR_NUMBER}")
+PR_DIFF=$(gh_api "https://api.github.com/repos/${REPO}/pulls/${PR_NUMBER}" \
+  -H "Accept: application/vnd.github.v3.diff")
 
 # Diff size: count, cap with explicit marker
 DIFF_TOTAL_LINES=$(echo "$PR_DIFF" | wc -l)
