@@ -1,45 +1,46 @@
 # Contributing
 
-## Development flow
+> **If you are an AI agent working in this repo, read [`AGENTS.md`](AGENTS.md) instead** — it has the strict rules of engagement, architecture, and known sharp edges. This file is the human-friendly companion.
 
-```
-1. Make changes in a feature branch
-2. Open a PR against `main`
-3. GitHub Action runs the test suite (gate)
-4. Mavis (developer agent) opens a code-reviewer session to review
-5. code-reviewer posts APPROVE or REQUEST_CHANGES to the PR
-6. If APPROVE → Mavis merges → CI deploys to Pages
-7. If REQUEST_CHANGES → fix the issues → re-request review
-```
+## Quick start
+
+1. **Read the rules** in `AGENTS.md` (yes, really, even if you're a human)
+2. Create a feature branch: `git checkout -b fix/your-thing`
+3. Make changes + run `node test/harness.js` — must be 140+ green
+4. Push + open PR
+5. Ask Mavis to spawn the `code-reviewer` agent (or just say "review PR #N")
+6. After review approves, Mavis merges → CI deploys
 
 ## The golden rule: separate dev from review
 
-**The same agent that writes the code MUST NOT be the one that approves it.**
+The agent that **writes** the code must not be the agent that **approves** it. This is enforced by:
 
-This is enforced by:
+- A dedicated `code-reviewer` agent (different persona, only reviews, never writes)
+- Branch protection: `main` requires 1 review + green CI before merge
+- The `scripts/review-pr.sh` helper that spawns the reviewer in a separate session
 
-1. A dedicated `code-reviewer` agent (different persona, only reviews)
-2. The `scripts/review-pr.sh` script that spawns a fresh session with the diff
-3. GitHub branch protection: `main` requires 1 review before merge
+## How a review works
 
-When you ask "review PR #N":
+1. You (or Mavis) run `scripts/review-pr.sh <PR_NUMBER>`
+2. Script fetches the diff, writes a structured review prompt
+3. Mavis spawns a `code-reviewer` session with that prompt
+4. Reviewer analyzes + posts verdict (APPROVE / REQUEST_CHANGES / COMMENT) via GitHub API
+5. Mavis sees the verdict:
+   - **APPROVE** → merges the PR
+   - **REQUEST_CHANGES** → fixes the issues, pushes again, re-reviews
+   - **COMMENT** → reads the feedback, decides what to do
 
-- I (Mavis, dev) invoke the `code-reviewer` agent in a separate session
-- The reviewer posts their verdict via GitHub API
-- If APPROVE: I auto-merge
-- If REQUEST_CHANGES: I see what the reviewer said and fix it
+## The reviewer persona
 
-## How to ask for a review
+`code-reviewer` is a strict, skeptical gatekeeper. It will:
 
-Just say: **"review PR #N"** — I'll handle the rest.
+- Flag no-op tests (`assert(1+1===2)`)
+- Catch silent diff truncation
+- Find injection vectors in shell scripts
+- Notice scope creep
+- Demand real test coverage for behavior changes
 
-Or run the script directly:
-
-```bash
-./scripts/review-pr.sh 2
-```
-
-This generates a review prompt at `scripts/.review-prompt-pr<N>.md` and the next conversation turn will spawn the reviewer.
+It is not your friend. That is the point.
 
 ## Test locally before pushing
 
@@ -47,14 +48,19 @@ This generates a review prompt at `scripts/.review-prompt-pr<N>.md` and the next
 node test/harness.js
 ```
 
-All 140 assertions must pass. The CI gate is the same.
+All 140 assertions must pass. The CI gate is the same. The reviewer will check that the test count went up if you changed behavior.
 
 ## Branch protection
 
 `main` is protected:
-- Requires 1 approving review
-- Dismiss stale approvals on push
+- 1 approving review required
+- Status checks (CI) must pass
+- Dismiss stale approvals on new push
 - No force-push
 - No deletion
 
-(Configure in GitHub repo settings → Branches → main)
+See `Settings → Branches → main` in GitHub to verify.
+
+## Token rotation
+
+GITHUB_TOKEN (used to push and call GitHub API) expires 2026-08-14. The cron reminder fires 2026-08-11. To rotate, see `AGENTS.md` § "Token rotation".
