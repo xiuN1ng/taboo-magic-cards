@@ -4,10 +4,11 @@
 
 ## What this project is
 
-**禁忌魔卡** (Taboo Magic Cards) — a Balatro-like roguelike card game. Theme: *「别按那个键」* (Don't Press That Button).
+**禁忌魔卡** (Taboo Magic Cards) — a Balatro-like roguelike card game. Build poker hands, gamble on forbidden cards, and survive 8 antes of escalating directives.
 
 - **Tech**: vanilla HTML/CSS/JS. No build step. No bundler. Pure static.
 - **Levels**: 8 antes × 3 blinds (small / big / boss) = 24 levels.
+- **Endings**: 2 (通关 / 失败) — match Balatro's binary outcome.
 - **Live**: https://xiuN1ng.github.io/taboo-magic-cards/
 - **Repo**: https://github.com/xiuN1ng/taboo-magic-cards
 
@@ -15,7 +16,7 @@
 
 ```
 1. Create a feature branch     (NEVER push to main directly — branch protection will block)
-2. Run `node test/harness.js`  (must pass all assertions locally — currently 142)
+2. Run `node test/harness.js`  (must pass all assertions locally — currently 139)
 3. Push branch + open PR       (CI runs tests as a gate)
 4. Spawn `code-reviewer` agent (separate persona, only reviews, never writes)
 5. Address review findings     (APPROVE → merge | REQUEST_CHANGES → fix)
@@ -41,13 +42,12 @@
 | `js/deck.js` | 52-card deck + `markForbidden()` (pool-based, see "known sharp edges") |
 | `js/jokers.js` | 10 jokers with `apply(hand, selected, state) → {chips, mult}` |
 | `js/directive.js` | 10 forbidden directives + `checkViolation()` |
-| `js/button-event.js` | The 70/30 reward/penalty roll for the always-visible red button |
 | `js/shop.js` | Shop between blinds (buy jokers, sell, replace) |
-| `js/endings.js` | 3 endings based on 戒断值 (corruption): pure / balanced / corrupted |
+| `js/endings.js` | 2 endings (通关 / 失败) based on run outcome |
 | `js/game-state.js` | Single source of truth, `nextBlind()`, `calculateTarget(ante, blind)` |
 | `js/ui.js` | All UI rendering + anime.js animations |
 | `js/main.js` | Orchestrator |
-| `test/harness.js` | Test harness — currently 142 assertions across 15 modules, run before pushing |
+| `test/harness.js` | Test harness — currently 139 assertions across 15 modules, run before pushing |
 | `test/oracle.js` | Independent reference poker evaluator (cross-checks production) |
 | `test/README.md` | How the test suite works |
 | `scripts/review-pr.sh` | PR review helper: fetches diff, writes review prompt |
@@ -127,10 +127,10 @@ bash scripts/review-pr.sh <PR_NUMBER>
 ```bash
 cd /workspace/taboo-cards
 node test/harness.js
-# Should print "通过: 142    失败: 0" and exit 0
+# Should print "通过: 139    失败: 0" and exit 0
 ```
 
-- 142 assertions across 15 modules
+- 139 assertions across 15 modules
 - 5000+ random hands cross-validated against independent oracle
 - 1000 random hands checked against invariants (NaN-safety, type legality)
 - Pure Node, no server, no browser. ~1.4s total.

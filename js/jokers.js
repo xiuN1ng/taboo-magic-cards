@@ -112,15 +112,6 @@ const JOKERS = [
       return { mult: m };
     },
   },
-  {
-    id: 'joker_press',
-    name: '按键收藏家',
-    desc: '本关按过键:每手 +10 筹码',
-    apply(hand, selected, state) {
-      if (state.pressedButtonThisAnte) return { chips: 10 };
-      return { chips: 0 };
-    },
-  },
 ];
 
 function getRandomJokers(count, excludeIds = []) {

@@ -14,7 +14,7 @@
       <div class="title-frame">
         <h1 class="game-title">禁 忌 魔 卡</h1>
         <p class="subtitle">Taboo Magic Cards</p>
-        <p class="tagline">「别 按 那 个 键」</p>
+        <p class="tagline">「每 张 牌 都 是 诱 惑」</p>
         <div class="title-buttons">
           <button class="btn-primary" id="btn-start">开 始 一 局</button>
           <button class="btn-secondary" id="btn-rules">玩 法 说 明</button>
@@ -42,11 +42,10 @@
           </ul>
         </div>
         <div class="rules-section">
-          <h3>三个特殊机制</h3>
+          <h3>两个特殊机制</h3>
           <ul>
-            <li><b>禁忌指令</b>(顶部红框):本关被禁的事。违反 = 当手 ×2.5 分 + 戒断 +1</li>
+            <li><b>禁忌指令</b>(顶部红框):本关被禁的事。违反 = 当手 ×2.5 分 + 违规 +1</li>
             <li><b>禁卡</b>(红色边框):出 +5 倍率,但 <b>厄运 +1</b></li>
-            <li><b>那个键</b>(右下角红):任何时候都能按。70% 奖励 / 30% 惩罚 + <b>戒断 +1</b></li>
           </ul>
         </div>
         <div class="rules-section">
@@ -55,7 +54,7 @@
             <li><b>0–2</b>: 安全,无效果</li>
             <li><b>3–5</b>: 小诅咒,商店净化变贵</li>
             <li><b>6–8</b>: 中诅咒,部分手牌可能自动变禁卡</li>
-            <li><b>9–10</b>: 临界,强制结束游戏进入沉沦结局</li>
+            <li><b>9–10</b>: 临界,强制结束游戏</li>
           </ul>
         </div>
         <div class="rules-section">
@@ -63,14 +62,6 @@
           <ul>
             <li>各自有被动效果,会加成你的筹码或倍率</li>
             <li>商店可以买、可以卖(+$2)、满了可以替换</li>
-          </ul>
-        </div>
-        <div class="rules-section">
-          <h3>戒断值 → 结局</h3>
-          <ul>
-            <li><b>0–2 清白</b>:你守住了。世界是安全的。</li>
-            <li><b>3–10 平衡</b>:你学会了与诱惑共处。</li>
-            <li><b>11+ 沉沦</b>:你听见那个声音在低语。</li>
           </ul>
         </div>
         <button class="btn-primary" id="btn-back-title">返 回</button>
@@ -93,7 +84,6 @@
             <span class="hud-label">厄运</span>
             <span id="hud-doom">0</span> <span class="hud-label">/ 10</span>
           </div>
-          <div class="hud-item">戒断 <span id="hud-corrupt">0</span></div>
           <div class="hud-item">$ <span id="hud-money">0</span></div>
         </div>
       </div>
@@ -119,14 +109,8 @@
         <div class="dt-row"><span class="dt-tier">0–2</span><span class="dt-text">安全 · 无额外效果</span></div>
         <div class="dt-row"><span class="dt-tier">3–5</span><span class="dt-text">小诅咒 · 商店净化变贵</span></div>
         <div class="dt-row"><span class="dt-tier">6–8</span><span class="dt-text">中诅咒 · 手牌可能变禁卡</span></div>
-        <div class="dt-row dt-danger"><span class="dt-tier">9–10</span><span class="dt-text">临界 · 强制进入沉沦结局</span></div>
-        <p class="dt-hint">出禁卡 +1 · 按键 25% 概率 +1 · 商店净化可 -1~-2</p>
-      </div>
-
-      <div class="always-button" id="always-button" title="别按">
-        <div class="ab-pulse"></div>
-        <div class="ab-label">按</div>
-        <div class="ab-count" id="ab-count">0</div>
+        <div class="dt-row dt-danger"><span class="dt-tier">9–10</span><span class="dt-text">临界 · 强制结束游戏</span></div>
+        <p class="dt-hint">出禁卡 +1 · 商店净化可 -1~-2</p>
       </div>
 
       <div class="voice-overlay" id="voice-overlay">
@@ -205,15 +189,6 @@
         </div>
       </div>
 
-      <div class="button-event" id="button-event">
-        <div class="button-frame">
-          <p class="event-prompt">那 个 键 在 召 唤 你</p>
-          <button class="big-button" id="btn-press">按</button>
-          <button class="btn-secondary" id="btn-skip">不 按</button>
-          <p class="event-detail" id="event-detail">70% 奖励 · 30% 风险</p>
-        </div>
-      </div>
-
       <div class="shop-overlay" id="shop-overlay">
         <div class="shop-frame">
           <h2>商 店</h2>
@@ -265,9 +240,7 @@
         <div class="end-stats">
           <div>本局打到 第 <b id="end-ante">1</b>/8 关 · 第 <b id="end-blind">1</b>/3 盲</div>
           <div>厄运 峰值 <b id="end-doom">0</b></div>
-          <div>戒断值 <b id="end-corrupt">0</b></div>
           <div>违规 <b id="end-violations">0</b> 次</div>
-          <div>按键 <b id="end-presses">0</b> 次</div>
         </div>
         <button class="btn-primary" id="btn-restart">再 来 一 局</button>
         <button class="btn-secondary" id="btn-back-title-2">回 主 菜 单</button>
@@ -279,7 +252,6 @@
   <script src="js/deck.js"></script>
   <script src="js/directive.js"></script>
   <script src="js/jokers.js"></script>
-  <script src="js/button-event.js"></script>
   <script src="js/shop.js"></script>
   <script src="js/endings.js"></script>
   <script src="js/ui.js"></script>
