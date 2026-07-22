@@ -37,7 +37,7 @@ node test/harness.js
 | 10 | 10 个 Directive | 每个指令 violation / no-violation 各一测 |
 | 11 | Deck 完整性 | 52 张,4×13,4×13,洗牌正确性 |
 | 12 | calculateTarget | 24 关目标,前后值都已检查 |
-| 13 | GameState 状态机 | doom/corrupt/joker 上限,corruption tier |
+| 13 | GameState 状态机 | doom/violations/joker 上限 |
 | 14 | 端到端可玩性 | 各关用什么牌能过 |
 
 ## 严格度层级

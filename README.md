@@ -1,18 +1,18 @@
 # Taboo Magic Cards · 禁忌魔卡
 
-> A Balatro-like roguelike card game. The theme is **「别按那个键」 — "Don't Press That Button"**.
+> A Balatro-like roguelike card game. Build poker hands, gamble on forbidden cards, survive 8 antes of escalating directives.
 
 ![Status](https://img.shields.io/badge/status-MVP-blueviolet)
 [![CI / Deploy](https://github.com/xiuN1ng/taboo-magic-cards/actions/workflows/ci.yml/badge.svg)](https://github.com/xiuN1ng/taboo-magic-cards/actions/workflows/ci.yml)
-![Tests](https://img.shields.io/badge/tests-140%20passing-success)
+![Tests](https://img.shields.io/badge/tests-139%20passing-success)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 ## What is it?
 
 - 8 antes × 3 blinds = 24 levels of poker-scoring roguelike
-- Theme: every level, a forbidden rule (don't play pairs, don't discard, only 1 card...)
-- A red button you CAN press anytime — 70% reward / 30% punishment
-- 10 jokers with unique effects, 10 forbidden directives
+- Every level has a forbidden directive (don't play pairs, don't discard, only 1 card...)
+- 10 jokers with unique effects, 9 forbidden cards in the deck, doomsday thresholds
+- 2 endings (通关 / 失败) — match Balatro's binary outcome
 - Pure HTML/CSS/JS, **no build step** — runs from a static file server
 
 ## Live Demo
@@ -43,15 +43,14 @@ That's it. No install, no build, no dependency to download at runtime (anime.js 
 │   ├── hand-eval.js        # Poker hand evaluation (10 hand types)
 │   ├── deck.js             # 52 cards + mark forbidden + shuffle
 │   ├── directive.js        # 10 forbidden directives
-│   ├── jokers.js           # 10 jokers
-│   ├── button-event.js     # 70/30 reward/penalty roll
+│   ├── jokers.js           # 9 jokers
 │   ├── shop.js             # Shop between blinds
-│   ├── endings.js          # 3 endings based on 戒断值 (corruption)
+│   ├── endings.js          # 2 endings (通关 / 失败)
 │   ├── ui.js               # UI + anime.js animations
 │   ├── game-state.js       # Single source of truth for state
 │   └── main.js             # Orchestrator
 ├── test/
-│   ├── harness.js          # 137 assertions across 14 modules
+│   ├── harness.js          # 139 assertions across 14 modules
 │   ├── oracle.js           # Independent reference implementation
 │   └── README.md           # Testing docs
 ├── assets/                 # Screenshots
@@ -69,7 +68,7 @@ That's it. No install, no build, no dependency to download at runtime (anime.js 
 |--------|--------|
 | Hand base (HIGH_CARD 5/1, PAIR 10/2, …, ROYAL_FLUSH 100/8) | Foundation |
 | Card chips (A=11, J/Q/K=10, else face) | Additive to chips |
-| Forbidden card per card | +5 mult, +1 doom, +1 corrupt |
+| Forbidden card per card | +5 mult, +1 doom |
 | Jokers | Various chips/mult |
 | Directive violation | ×2.5 mult |
 | `cardChips` invalid input | Returns 0 (NaN-safe) |
@@ -95,7 +94,7 @@ Full table — see `js/hand-eval.js` `HAND_TYPES` constant.
 node test/harness.js
 ```
 
-- **137 assertions** across 14 modules
+- **139 assertions** across 14 modules
 - **5,000+ random hands** cross-validated against an independent oracle
 - **1,000 random hands** checked against invariants (NaN-safety, type legality, mult bounds)
 - Pure Node, **no server / no browser / no network**

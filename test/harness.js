@@ -45,7 +45,7 @@ function loadGame() {
   sandbox.setTimeout = setTimeout;
   sandbox.clearTimeout = clearTimeout;
 
-  const modules = ['hand-eval', 'deck', 'jokers', 'directive', 'button-event', 'shop', 'endings', 'game-state'];
+  const modules = ['hand-eval', 'deck', 'jokers', 'directive', 'shop', 'endings', 'game-state'];
   for (const mod of modules) {
     const code = fs.readFileSync(path.join(SRC_DIR, `${mod}.js`), 'utf8');
     vm.runInContext(code, sandbox, { filename: `${mod}.js` });
@@ -647,7 +647,7 @@ for (const tc of jokerCases) {
     const j = Jokers.getJokerById(tc.id);
     const cards = tc.cards || tc.handMaker();
     const hand = HandEval.evaluateHand(cards);
-    const bonus = j.apply(hand, cards, { doom: 0, pressedButtonThisAnte: false });
+    const bonus = j.apply(hand, cards, { doom: 0 });
     if (tc.expectChips !== undefined) eq(bonus.chips || 0, tc.expectChips, 'chips');
     if (tc.expectMult !== undefined) eq(bonus.mult || 0, tc.expectMult, 'mult');
   });
@@ -679,20 +679,6 @@ test('诅咒之眼:2 张禁卡 +6 mult, +2 doom', () => {
   eq(bonus.mult, 6);
   eq(state.doom, 2);
 });
-
-test('按键收藏家:未按过 = 0', () => {
-  const j = Jokers.getJokerById('joker_press');
-  const b = j.apply({ type: HandTypes.HIGH_CARD }, [], { pressedButtonThisAnte: false });
-  eq(b.chips || 0, 0);
-});
-
-test('按键收藏家:按过 = 10', () => {
-  const j = Jokers.getJokerById('joker_press');
-  const b = j.apply({ type: HandTypes.HIGH_CARD }, [], { pressedButtonThisAnte: true });
-  eq(b.chips, 10);
-});
-
-// ====================== Section 10: 违规判定 ======================
 
 section('10. 10 个 Directive 违规判定');
 
@@ -909,9 +895,7 @@ test('newRun 初始化所有字段', () => {
   eq(s.money, 5);
   eq(s.discardsLeft, 3);
   eq(s.doom, 0);
-  eq(s.corrupt, 0);
   eq(s.violations, 0);
-  eq(s.buttonPresses, 0);
   eq(s.usedDirectiveIds.length, 0);
 });
 
@@ -925,26 +909,11 @@ test('addDoom 边界 [0, 10]', () => {
   eq(GameState.getDoom(), 0, '下限 0');
 });
 
-test('addCorrupt / violations / buttonPresses', () => {
+test('addViolation 累加', () => {
   GameState.newRun();
-  GameState.addCorrupt(3);
   GameState.addViolation();
-  GameState.recordButtonPress();
-  eq(GameState.getCorrupt(), 3);
-  eq(GameState.getViolations(), 1);
-  eq(GameState.getButtonPresses(), 1);
-  eq(GameState.getState().pressedButtonThisAnte, true);
-});
-
-test('corruption tier 正确', () => {
-  GameState.newRun();
-  GameState.addCorrupt(0); eq(GameState.getCorruptionTier(), 0);
-  GameState.newRun();
-  GameState.addCorrupt(3); eq(GameState.getCorruptionTier(), 1);
-  GameState.newRun();
-  GameState.addCorrupt(6); eq(GameState.getCorruptionTier(), 2);
-  GameState.newRun();
-  GameState.addCorrupt(10); eq(GameState.getCorruptionTier(), 3);
+  GameState.addViolation();
+  eq(GameState.getViolations(), 2);
 });
 
 test('joker 列表 ≤ 5', () => {

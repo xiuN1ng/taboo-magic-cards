@@ -7,14 +7,11 @@ const UI = (() => {
   const HUD_BLIND = document.getElementById('hud-blind');
   const HUD_SCORE = document.getElementById('hud-score');
   const HUD_DOOM = document.getElementById('hud-doom');
-  const HUD_CORRUPT = document.getElementById('hud-corrupt');
   const HUD_MONEY = document.getElementById('hud-money');
   const DIRECTIVE_TEXT = document.getElementById('directive-text');
   const SELECTED_COUNT = document.getElementById('selected-count');
   const DISCARDS_LEFT = document.getElementById('discards-left');
   const HAND_TYPE_NAME = document.getElementById('hand-type-name');
-  const ALWAYS_BUTTON = document.getElementById('always-button');
-  const AB_COUNT = document.getElementById('ab-count');
   const VOICE_OVERLAY = document.getElementById('voice-overlay');
   const VOICE_TEXT = document.getElementById('voice-text');
   const JOKER_BAR = document.getElementById('joker-bar');
@@ -39,7 +36,6 @@ const UI = (() => {
   let _onPlay = null;
   let _onDiscard = null;
   let _onSort = null;
-  let _onAlwaysPress = null;
   let _voiceTimeout = null;
   let _onJokerSlotClick = null;
   let _onReplaceTargetClick = null;
@@ -307,7 +303,6 @@ const UI = (() => {
 
     // Animate number changes
     animateNumber(HUD_DOOM, state.doom);
-    animateNumber(HUD_CORRUPT, state.corrupt);
     animateNumber(HUD_MONEY, state.money);
   }
 
@@ -504,116 +499,6 @@ const UI = (() => {
     });
   }
 
-  // ========== The Button event ==========
-
-  function showButtonEvent({ onPress, onSkip }) {
-    const overlay = document.getElementById('button-event');
-    const pressBtn = document.getElementById('btn-press');
-    const skipBtn = document.getElementById('btn-skip');
-    const detailEl = document.getElementById('event-detail');
-
-    detailEl.textContent = '70% 奖励 · 30% 风险';
-    overlay.classList.add('active');
-
-    anime.timeline()
-      .add({
-        targets: overlay.querySelector('.button-frame'),
-        scale: [0.6, 1],
-        opacity: [0, 1],
-        duration: 500,
-        easing: 'easeOutBack',
-      })
-      .add({
-        targets: pressBtn,
-        scale: [0, 1],
-        rotateZ: [180, 0],
-        duration: 600,
-        easing: 'easeOutElastic(1, .6)',
-      }, '-=300');
-
-    const pressHandler = () => {
-      pressBtn.removeEventListener('click', pressHandler);
-      skipBtn.removeEventListener('click', skipHandler);
-      animateButtonPress().then(() => {
-        hideButtonEvent().then(() => onPress && onPress());
-      });
-    };
-
-    const skipHandler = () => {
-      pressBtn.removeEventListener('click', pressHandler);
-      skipBtn.removeEventListener('click', skipHandler);
-      hideButtonEvent().then(() => onSkip && onSkip());
-    };
-
-    pressBtn.addEventListener('click', pressHandler);
-    skipBtn.addEventListener('click', skipHandler);
-  }
-
-  function animateButtonPress() {
-    return new Promise((resolve) => {
-      const btn = document.getElementById('btn-press');
-      anime.timeline()
-        .add({
-          targets: btn,
-          scale: [1, 0.85],
-          duration: 80,
-          easing: 'easeInQuad',
-        })
-        .add({
-          targets: btn,
-          scale: [0.85, 1.1],
-          duration: 150,
-          easing: 'easeOutQuad',
-        })
-        .add({
-          targets: '#button-event',
-          backgroundColor: [
-            { value: 'rgba(255, 77, 109, 0.6)', duration: 100 },
-            { value: 'rgba(0, 0, 0, 0.85)', duration: 400 },
-          ],
-          easing: 'easeOutQuad',
-        }, '-=200')
-        .add({
-          targets: btn,
-          scale: [1.1, 1],
-          duration: 200,
-          easing: 'easeOutBack',
-        }, '-=400')
-        .add({
-          targets: '#button-event .button-frame',
-          rotateZ: [0, (Math.random() - 0.5) * 8],
-          duration: 200,
-          easing: 'easeInOutQuad',
-        }, '-=200');
-      setTimeout(resolve, 600);
-    });
-  }
-
-  function setEventDetail(text, type) {
-    const detailEl = document.getElementById('event-detail');
-    detailEl.textContent = text;
-    detailEl.style.color = type === 'good' ? 'var(--candy-mint)' : (type === 'bad' ? 'var(--blood)' : 'var(--ink-dim)');
-  }
-
-  function hideButtonEvent() {
-    return new Promise((resolve) => {
-      const overlay = document.getElementById('button-event');
-      anime({
-        targets: overlay.querySelector('.button-frame'),
-        scale: [1, 0.6],
-        opacity: [1, 0],
-        duration: 300,
-        easing: 'easeInBack',
-        complete: () => {
-          overlay.classList.remove('active');
-          // Reset background
-          overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.85)';
-          resolve();
-        },
-      });
-    });
-  }
-
   // ========== Shop ==========
 
   function showShop({ items, money, onBuy, onLeave }) {
@@ -740,9 +625,7 @@ const UI = (() => {
       if (eb) eb.textContent = stats.blind + 1;
     }
     document.getElementById('end-doom').textContent = stats.doomPeak;
-    document.getElementById('end-corrupt').textContent = stats.corrupt;
     document.getElementById('end-violations').textContent = stats.violations;
-    document.getElementById('end-presses').textContent = stats.presses;
 
     showScreen('screen-end');
 
@@ -908,53 +791,6 @@ const UI = (() => {
         duration: 300,
         easing: 'easeOutQuad',
       }, '-=200');
-  }
-
-  // ========== Always-Visible Button ==========
-
-  function setAlwaysButtonHandler(handler) {
-    _onAlwaysPress = handler;
-    ALWAYS_BUTTON.onclick = () => {
-      if (!_onAlwaysPress) return;
-      if (ALWAYS_BUTTON.classList.contains('disabled')) return;
-      _onAlwaysPress();
-    };
-  }
-
-  function updateAlwaysButtonCount(n) {
-    AB_COUNT.textContent = n;
-    anime({
-      targets: AB_COUNT,
-      scale: [1.4, 1],
-      duration: 300,
-      easing: 'easeOutBack',
-    });
-  }
-
-  function setAlwaysButtonEnabled(enabled) {
-    if (enabled) {
-      ALWAYS_BUTTON.classList.remove('disabled');
-    } else {
-      ALWAYS_BUTTON.classList.add('disabled');
-    }
-  }
-
-  // ========== Corruption Tier (戒断值画面侵蚀) ==========
-
-  function setCorruptionTier(tier) {
-    const screen = document.getElementById('screen-game');
-    for (let i = 0; i <= 3; i++) {
-      screen.classList.remove('tier-' + i);
-    }
-    screen.classList.add('tier-' + tier);
-    if (tier > 0) {
-      anime({
-        targets: screen,
-        opacity: [0.7, 1],
-        duration: 600,
-        easing: 'easeOutQuad',
-      });
-    }
   }
 
   // ========== Joker Bar (Joker 预览条) ==========
@@ -1268,8 +1104,6 @@ const UI = (() => {
     animateDiscardCards,
     animateDrawCards,
     showResult,
-    showButtonEvent,
-    setEventDetail,
     showShop,
     markShopItemSold,
     updateShopMoney,
@@ -1281,10 +1115,6 @@ const UI = (() => {
     shakeHand,
     animateTitleEntrance,
     animateRulesEntrance,
-    setAlwaysButtonHandler,
-    updateAlwaysButtonCount,
-    setAlwaysButtonEnabled,
-    setCorruptionTier,
     speakVoice,
     renderJokerBar,
     setJokerBarReplaceMode,

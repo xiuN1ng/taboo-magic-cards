@@ -32,10 +32,7 @@ const GameState = (() => {
       directive: null,           // Current forbidden directive
       usedDirectiveIds: [],      // Track which directives have been used
       doom: 0,                   // 0-10
-      corrupt: 0,                // 戒断值
       violations: 0,             // Number of times player violated directive
-      buttonPresses: 0,          // Number of times player pressed button
-      pressedButtonThisAnte: false, // Used by joker
       doomPeak: 0,               // Highest doom reached this run
 
       // Jokers
@@ -103,7 +100,6 @@ const GameState = (() => {
     state.blind += 1;
     state.discardsLeft = 3;
     state.discardsUsedThisBlind = 0;
-    state.pressedButtonThisAnte = false;
 
     if (state.blind >= 3) {
       // End of this ante — advance to next ante
@@ -176,18 +172,13 @@ const GameState = (() => {
   // === Discards ===
   function getDiscardsLeft() { return state.discardsLeft; }
 
-  // === Doom & Corrupt ===
+  // === Doom & Violations ===
   function addDoom(n) {
     state.doom = Math.min(10, Math.max(0, state.doom + n));
     if (state.doom > state.doomPeak) state.doomPeak = state.doom;
   }
 
-  function addCorrupt(n) { state.corrupt += n; }
   function addViolation() { state.violations += 1; }
-  function recordButtonPress() {
-    state.buttonPresses += 1;
-    state.pressedButtonThisAnte = true;
-  }
 
   // Apply Doom threshold effects
   function applyDoomEffects() {
@@ -201,20 +192,8 @@ const GameState = (() => {
   }
 
   function getDoom() { return state.doom; }
-  function getCorrupt() { return state.corrupt; }
   function getViolations() { return state.violations; }
-  function getButtonPresses() { return state.buttonPresses; }
   function getDoomPeak() { return state.doomPeak; }
-
-  // Returns 0/1/2/3 based on 戒断值 (corruption) — drives visual tier
-  // 0-2: clean · 3-5: mild · 6-8: medium · 9+: severe
-  function getCorruptionTier() {
-    const c = state.corrupt;
-    if (c >= 9) return 3;
-    if (c >= 6) return 2;
-    if (c >= 3) return 1;
-    return 0;
-  }
 
   return {
     newRun,
@@ -237,16 +216,11 @@ const GameState = (() => {
     canAddJoker,
     getDiscardsLeft,
     addDoom,
-    addCorrupt,
     addViolation,
-    recordButtonPress,
     applyDoomEffects,
     getDoom,
-    getCorrupt,
     getViolations,
-    getButtonPresses,
     getDoomPeak,
-    getCorruptionTier,
   };
 })();
 

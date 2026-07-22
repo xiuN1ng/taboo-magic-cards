@@ -1,33 +1,24 @@
 // endings.js — End-of-run endings
-// Based on 戒断值 (corruption value): violations + forbidden cards played + button presses
+// Two-endings system: 通关 (cleared all 8 antes) vs 失败 (failed a blind)
+// Style matches Balatro: simple win/lose split, no extra judgment
 
 function determineEnding(state) {
-  const corrupt = state.corrupt;
-  if (corrupt <= 3) {
+  if (state.phase === 'win') {
     return {
-      id: 'pure',
-      title: '清 白 结 局',
-      subtitle: '你 没 有 沦 陷',
-      description: '你听从了那个声音的警告。\n你按捺住了每一次按下的冲动。\n你看着那道红光闪烁,然后转身离开。\n\n这个世界是安全的。\n因为你选择了安全。',
-      hue: 'pure',
-    };
-  } else if (corrupt <= 10) {
-    return {
-      id: 'balanced',
-      title: '平 衡 结 局',
-      subtitle: '在 边 缘 游 走',
-      description: '有些禁忌你打破了。\n有些禁令你遵守了。\n你的指尖留下了一些红印。\n但你仍然是自己。\n\n你学会了与诱惑共处。\n也许这就是人类的常态。',
-      hue: 'balanced',
-    };
-  } else {
-    return {
-      id: 'corrupted',
-      title: '沉 沦 结 局',
-      subtitle: '你 听 见 了 那 个 声 音',
-      description: '你按下了那个键。\n不止一次。\n\n你看见了不应该看见的东西。\n你做了不应该做的事。\n你获得了不应该获得的分数。\n\n但你输了。\n你输给了自己。\n\n那个声音现在在你耳边低语。\n它说:「再 来 一 次?」',
-      hue: 'corrupted',
+      id: 'cleared',
+      title: '通 关',
+      subtitle: '八 关 皆 克',
+      description: '你走完了八关。\n每一道禁忌都拦不住你。\n每一张禁卡都被你打出。\n\n最后一张牌落在桌上时,牌组合上书页。\n你听见一个很轻的声音说:\n「再 来 一 次?」',
+      hue: 'cleared',
     };
   }
+  return {
+    id: 'failed',
+    title: '失 败',
+    subtitle: '你 在 第 ' + state.ante + ' 关 倒 下',
+    description: '你的筹码不够。\n关卡的目标还差那么一点。\n你翻完了手牌,没有牌能救你。\n\n牌组合上。\n你可以再来一局,或者回主菜单。',
+    hue: 'failed',
+  };
 }
 
 window.Endings = {
